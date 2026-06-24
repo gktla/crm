@@ -502,6 +502,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/login/GoogleOAuthButton.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/login/ConfirmationRequired.tsx",
           "type": "registry:component"
         },
