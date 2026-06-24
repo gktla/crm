@@ -14,6 +14,7 @@ import { LoginSkeleton } from "./LoginSkeleton";
 import { Notification } from "@/components/admin/notification";
 import { ConfirmationRequired } from "./ConfirmationRequired";
 import { SSOAuthButton } from "./SSOAuthButton";
+import { GoogleOAuthButton } from "./GoogleOAuthButton";
 
 export const SignupPage = () => {
   const queryClient = useQueryClient();
@@ -22,6 +23,7 @@ export const SignupPage = () => {
     darkModeLogo: logo,
     title,
     googleWorkplaceDomain,
+    googleOAuthDomain,
   } = useConfigurationContext();
   const navigate = useNavigate();
   const translate = useTranslate();
@@ -190,6 +192,16 @@ export const SignupPage = () => {
                     _: "Sign in with Google Workplace",
                   })}
                 </SSOAuthButton>
+              ) : null}
+              {googleOAuthDomain ? (
+                <GoogleOAuthButton
+                  className="w-full"
+                  domain={googleOAuthDomain}
+                >
+                  {translate("crm.auth.sign_in_google", {
+                    _: "Sign in with Google",
+                  })}
+                </GoogleOAuthButton>
               ) : null}
             </div>
           </form>

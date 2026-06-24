@@ -7,6 +7,7 @@ import { TextInput } from "@/components/admin/text-input";
 import { Notification } from "@/components/admin/notification";
 import { useConfigurationContext } from "@/components/atomic-crm/root/ConfigurationContext.tsx";
 import { SSOAuthButton } from "./SSOAuthButton";
+import { GoogleOAuthButton } from "./GoogleOAuthButton";
 
 /**
  * Login page displayed when authentication is enabled and the user is not authenticated.
@@ -22,6 +23,7 @@ export const LoginPage = (props: { redirectTo?: string }) => {
     darkModeLogo,
     title,
     googleWorkplaceDomain,
+    googleOAuthDomain,
     disableEmailPasswordAuthentication,
   } = useConfigurationContext();
   const { redirectTo } = props;
@@ -137,6 +139,13 @@ export const LoginPage = (props: { redirectTo?: string }) => {
                   _: "Sign in with Google Workplace",
                 })}
               </SSOAuthButton>
+            ) : null}
+            {googleOAuthDomain ? (
+              <GoogleOAuthButton className="w-full" domain={googleOAuthDomain}>
+                {translate("crm.auth.sign_in_google", {
+                  _: "Sign in with Google",
+                })}
+              </GoogleOAuthButton>
             ) : null}
             {disableEmailPasswordAuthentication ? null : (
               <Link
