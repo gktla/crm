@@ -123,6 +123,39 @@ export const getAuthProvider = (): AuthProvider => {
       }
       return baseAuthProvider.login(params);
     },
+    handleCallback: async (params) => {
+      // ra-supabase's handleCallback only wires up recovery/invite redirects and
+      // leaves the session unset for every other callback — including OAuth,
+      // which carries no GoTrue `type`. Establish the session explicitly here
+      // from the tokens forwarded by `public/auth-callback.html`.
+      const hashQuery = window.location.hash.includes("?")
+        ? window.location.hash.slice(window.location.hash.indexOf("?") + 1)
+        : "";
+      const urlParams = new URLSearchParams(
+        hashQuery || window.location.search,
+      );
+      const accessToken = urlParams.get("access_token");
+      const refreshToken = urlParams.get("refresh_token");
+      const type = urlParams.get("type");
+      const isRecoveryOrInvite = type === "recovery" || type === "invite";
+
+      if (
+        accessToken &&
+        refreshToken &&
+        !isRecoveryOrInvite &&
+        type !== "signup"
+      ) {
+        const { error } = await getSupabaseClient().auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (error) {
+          throw error;
+        }
+        return;
+      }
+      return baseAuthProvider.handleCallback?.(params);
+    },
     logout: async (params) => {
       clearCache();
       return baseAuthProvider.logout(params);
