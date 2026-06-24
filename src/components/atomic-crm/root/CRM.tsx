@@ -128,6 +128,7 @@ export const CRM = ({
   i18nProvider = defaulti18nProvider,
   store = defaultStore,
   googleWorkplaceDomain = import.meta.env.VITE_GOOGLE_WORKPLACE_DOMAIN,
+  googleOAuthDomain = import.meta.env.VITE_GOOGLE_OAUTH_DOMAIN,
   disableEmailPasswordAuthentication = import.meta.env
     .VITE_DISABLE_EMAIL_PASSWORD_AUTHENTICATION === "true",
   disableTelemetry,
@@ -163,6 +164,7 @@ export const CRM = ({
         darkModeLogo,
         lightModeLogo,
         googleWorkplaceDomain,
+        googleOAuthDomain,
         disableEmailPasswordAuthentication,
       } satisfies ConfigurationContextValue);
     }

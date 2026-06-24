@@ -102,6 +102,25 @@ export const getAuthProvider = (): AuthProvider => {
         }
         return;
       }
+      if (params.oauthProvider) {
+        // The `hd` query param restricts Google's account chooser to the given
+        // Workspace domain. It is a UX hint only — the real domain boundary is
+        // enforced server-side in the handle_new_user trigger.
+        const { error } = await getSupabaseClient().auth.signInWithOAuth({
+          provider: params.oauthProvider,
+          options: {
+            redirectTo: `${window.location.origin}/auth-callback.html`,
+            queryParams: {
+              prompt: "select_account",
+              ...(params.domain ? { hd: params.domain } : {}),
+            },
+          },
+        });
+        if (error) {
+          throw error;
+        }
+        return;
+      }
       return baseAuthProvider.login(params);
     },
     logout: async (params) => {

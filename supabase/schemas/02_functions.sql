@@ -231,13 +231,23 @@ CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
 declare
   sales_count int;
 begin
+  -- Google OAuth domain restriction (server-side, authoritative).
+  -- The `hd` query param on the client only pre-filters Google's account
+  -- chooser and can be bypassed, so the real boundary is enforced here:
+  -- reject any google-provider sign-in whose email is not @goalkeeper.com.
+  -- The email/password path is left untouched.
+  if new.raw_app_meta_data ->> 'provider' = 'google'
+     and new.email not like '%@goalkeeper.com' then
+    raise exception 'Sign-in is restricted to @goalkeeper.com accounts';
+  end if;
+
   select count(id) into sales_count
   from public.sales;
 
   insert into public.sales (first_name, last_name, email, user_id, administrator)
   values (
-    coalesce(new.raw_user_meta_data ->> 'first_name', new.raw_user_meta_data -> 'custom_claims' ->> 'first_name', 'Pending'),
-    coalesce(new.raw_user_meta_data ->> 'last_name', new.raw_user_meta_data -> 'custom_claims' ->> 'last_name', 'Pending'),
+    coalesce(new.raw_user_meta_data ->> 'first_name', new.raw_user_meta_data -> 'custom_claims' ->> 'first_name', new.raw_user_meta_data ->> 'given_name', new.raw_user_meta_data ->> 'name', new.raw_user_meta_data ->> 'full_name', 'Pending'),
+    coalesce(new.raw_user_meta_data ->> 'last_name', new.raw_user_meta_data -> 'custom_claims' ->> 'last_name', new.raw_user_meta_data ->> 'family_name', 'Pending'),
     new.email,
     new.id,
     case when sales_count > 0 then FALSE else TRUE end
