@@ -193,10 +193,14 @@ export const SignupPage = () => {
                   })}
                 </SSOAuthButton>
               ) : null}
-              {googleOAuthDomain ? (
+              {(googleOAuthDomain ??
+              import.meta.env.VITE_GOOGLE_OAUTH_DOMAIN) ? (
                 <GoogleOAuthButton
                   className="w-full"
-                  domain={googleOAuthDomain}
+                  domain={
+                    googleOAuthDomain ??
+                    import.meta.env.VITE_GOOGLE_OAUTH_DOMAIN
+                  }
                 >
                   {translate("crm.auth.sign_in_google", {
                     _: "Sign in with Google",
