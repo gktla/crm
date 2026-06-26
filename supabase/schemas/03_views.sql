@@ -93,7 +93,14 @@ select
     c.tax_identifier,
     c.logo,
     count(distinct d.id) as nb_deals,
-    count(distinct co.id) as nb_contacts
+    count(distinct co.id) as nb_contacts,
+    -- Goalkeeper schema (Phase 1): appended at the end so CREATE OR REPLACE VIEW
+    -- keeps the existing leading columns (Postgres only allows appending).
+    c.kind,
+    c.ltv,
+    c.updated_at,
+    c.coda_row_id,
+    c.legacy_ref
 from public.companies c
     left join public.deals d on c.id = d.company_id
     left join public.contacts co on c.id = co.company_id

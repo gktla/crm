@@ -106,6 +106,41 @@ grant all on table public.favicons_excluded_domains to anon;
 grant all on table public.favicons_excluded_domains to authenticated;
 grant all on table public.favicons_excluded_domains to service_role;
 
+-- Goalkeeper schema (Phase 1) table grants
+-- Matches the Atomic pattern: table privileges granted to all API roles; anon is
+-- still blocked at row level because it has no RLS policy on these tables.
+grant all on table public.brands to anon;
+grant all on table public.brands to authenticated;
+grant all on table public.brands to service_role;
+
+grant all on table public.pipeline_stages to anon;
+grant all on table public.pipeline_stages to authenticated;
+grant all on table public.pipeline_stages to service_role;
+
+grant all on table public.leagues to anon;
+grant all on table public.leagues to authenticated;
+grant all on table public.leagues to service_role;
+
+grant all on table public.nations to anon;
+grant all on table public.nations to authenticated;
+grant all on table public.nations to service_role;
+
+grant all on table public.sports to anon;
+grant all on table public.sports to authenticated;
+grant all on table public.sports to service_role;
+
+grant all on table public.target_lists to anon;
+grant all on table public.target_lists to authenticated;
+grant all on table public.target_lists to service_role;
+
+grant all on table public.clubs to anon;
+grant all on table public.clubs to authenticated;
+grant all on table public.clubs to service_role;
+
+grant all on table public.company_brands to anon;
+grant all on table public.company_brands to authenticated;
+grant all on table public.company_brands to service_role;
+
 -- View grants
 grant all on table public.activity_log to anon;
 grant all on table public.activity_log to authenticated;
@@ -159,6 +194,32 @@ grant all on sequence public.tags_id_seq to service_role;
 grant all on sequence public.tasks_id_seq to anon;
 grant all on sequence public.tasks_id_seq to authenticated;
 grant all on sequence public.tasks_id_seq to service_role;
+
+-- Goalkeeper schema (Phase 1) sequence grants
+-- clubs and company_brands have no identity sequence (PKs are FK / composite).
+grant all on sequence public.brands_id_seq to anon;
+grant all on sequence public.brands_id_seq to authenticated;
+grant all on sequence public.brands_id_seq to service_role;
+
+grant all on sequence public.pipeline_stages_id_seq to anon;
+grant all on sequence public.pipeline_stages_id_seq to authenticated;
+grant all on sequence public.pipeline_stages_id_seq to service_role;
+
+grant all on sequence public.leagues_id_seq to anon;
+grant all on sequence public.leagues_id_seq to authenticated;
+grant all on sequence public.leagues_id_seq to service_role;
+
+grant all on sequence public.nations_id_seq to anon;
+grant all on sequence public.nations_id_seq to authenticated;
+grant all on sequence public.nations_id_seq to service_role;
+
+grant all on sequence public.sports_id_seq to anon;
+grant all on sequence public.sports_id_seq to authenticated;
+grant all on sequence public.sports_id_seq to service_role;
+
+grant all on sequence public.target_lists_id_seq to anon;
+grant all on sequence public.target_lists_id_seq to authenticated;
+grant all on sequence public.target_lists_id_seq to service_role;
 
 -- Default privileges
 alter default privileges for role postgres in schema public grant all on sequences to postgres;
