@@ -78,3 +78,45 @@ create or replace trigger on_auth_user_created
 create or replace trigger on_auth_user_updated
     after update on auth.users
     for each row execute function public.handle_update_user();
+
+-- Goalkeeper schema (Phase 2): updated_at maintenance
+create or replace trigger set_contacts_updated_at
+    before update on public.contacts
+    for each row execute function private.gk_set_updated_at();
+
+create or replace trigger set_company_contacts_updated_at
+    before update on public.company_contacts
+    for each row execute function private.gk_set_updated_at();
+
+create or replace trigger set_contact_social_profiles_updated_at
+    before update on public.contact_social_profiles
+    for each row execute function private.gk_set_updated_at();
+
+-- Goalkeeper schema (Phase 2): bidirectional sync of contacts.company_id mirror
+-- company_contacts change -> recompute contacts.company_id
+create or replace trigger gk_company_contacts_sync
+    after insert or delete or update of company_id, contact_id, is_primary, is_current
+    on public.company_contacts
+    for each row execute function private.gk_sync_primary_company();
+
+-- Atomic-side contacts.company_id change -> create/promote company_contacts
+create or replace trigger gk_contacts_company_bridge
+    after insert or update of company_id on public.contacts
+    for each row execute function private.gk_bridge_contact_company();
+
+-- Goalkeeper schema (Phase 3): keep deals.stage_id <-> deals.stage (slug) in sync;
+-- accept legacy slug writes; reject cross-brand / unknown stages. BEFORE -> no recursion.
+create or replace trigger gk_deals_stage_sync
+    before insert or update of stage_id, stage, brand_id on public.deals
+    for each row execute function private.gk_sync_deal_stage();
+
+-- deal_modules only apply to xG-brand deals.
+create or replace trigger gk_deal_modules_brand_guard
+    before insert or update on public.deal_modules
+    for each row execute function private.gk_check_deal_module_brand();
+
+-- Goalkeeper schema (Phase 4): activity follow-up automation (one task per activity).
+create or replace trigger gk_activities_followup
+    after insert or update of requires_follow_up, follow_up_date, contact_id, company_id, deal_id, sales_id
+    on public.activities
+    for each row execute function private.gk_handle_activity_followup();

@@ -100,7 +100,8 @@ select
     c.ltv,
     c.updated_at,
     c.coda_row_id,
-    c.legacy_ref
+    c.legacy_ref,
+    c.slug
 from public.companies c
     left join public.deals d on c.id = d.company_id
     left join public.contacts co on c.id = co.company_id
@@ -128,7 +129,12 @@ select
     (jsonb_path_query_array(co.email_jsonb, '$[*]."email"'))::text as email_fts,
     (jsonb_path_query_array(co.phone_jsonb, '$[*]."number"'))::text as phone_fts,
     c.name as company_name,
-    count(distinct t.id) filter (where t.done_date is null) as nb_tasks
+    count(distinct t.id) filter (where t.done_date is null) as nb_tasks,
+    -- Goalkeeper schema (Phase 2): appended at the end (CREATE OR REPLACE VIEW
+    -- only allows appending; existing columns keep their order).
+    co.updated_at,
+    co.coda_row_id,
+    co.legacy_ref
 from public.contacts co
     left join public.tasks t on co.id = t.contact_id
     left join public.companies c on co.company_id = c.id

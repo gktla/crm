@@ -117,9 +117,9 @@ grant all on table public.pipeline_stages to anon;
 grant all on table public.pipeline_stages to authenticated;
 grant all on table public.pipeline_stages to service_role;
 
-grant all on table public.leagues to anon;
-grant all on table public.leagues to authenticated;
-grant all on table public.leagues to service_role;
+grant all on table public.org_types to anon;
+grant all on table public.org_types to authenticated;
+grant all on table public.org_types to service_role;
 
 grant all on table public.nations to anon;
 grant all on table public.nations to authenticated;
@@ -137,9 +137,39 @@ grant all on table public.clubs to anon;
 grant all on table public.clubs to authenticated;
 grant all on table public.clubs to service_role;
 
+grant all on table public.company_org_types to anon;
+grant all on table public.company_org_types to authenticated;
+grant all on table public.company_org_types to service_role;
+
+grant all on table public.org_relationships to anon;
+grant all on table public.org_relationships to authenticated;
+grant all on table public.org_relationships to service_role;
+
+grant all on table public.competitions to anon;
+grant all on table public.competitions to authenticated;
+grant all on table public.competitions to service_role;
+
 grant all on table public.company_brands to anon;
 grant all on table public.company_brands to authenticated;
 grant all on table public.company_brands to service_role;
+
+-- Goalkeeper schema (Phase 2) table grants
+grant all on table public.company_contacts to anon;
+grant all on table public.company_contacts to authenticated;
+grant all on table public.company_contacts to service_role;
+
+grant all on table public.contact_social_profiles to anon;
+grant all on table public.contact_social_profiles to authenticated;
+grant all on table public.contact_social_profiles to service_role;
+
+-- Goalkeeper schema (Phase 3 / 4) table grants
+grant all on table public.deal_modules to anon;
+grant all on table public.deal_modules to authenticated;
+grant all on table public.deal_modules to service_role;
+
+grant all on table public.activities to anon;
+grant all on table public.activities to authenticated;
+grant all on table public.activities to service_role;
 
 -- View grants
 grant all on table public.activity_log to anon;
@@ -205,9 +235,13 @@ grant all on sequence public.pipeline_stages_id_seq to anon;
 grant all on sequence public.pipeline_stages_id_seq to authenticated;
 grant all on sequence public.pipeline_stages_id_seq to service_role;
 
-grant all on sequence public.leagues_id_seq to anon;
-grant all on sequence public.leagues_id_seq to authenticated;
-grant all on sequence public.leagues_id_seq to service_role;
+grant all on sequence public.org_types_id_seq to anon;
+grant all on sequence public.org_types_id_seq to authenticated;
+grant all on sequence public.org_types_id_seq to service_role;
+
+grant all on sequence public.org_relationships_id_seq to anon;
+grant all on sequence public.org_relationships_id_seq to authenticated;
+grant all on sequence public.org_relationships_id_seq to service_role;
 
 grant all on sequence public.nations_id_seq to anon;
 grant all on sequence public.nations_id_seq to authenticated;
@@ -220,6 +254,35 @@ grant all on sequence public.sports_id_seq to service_role;
 grant all on sequence public.target_lists_id_seq to anon;
 grant all on sequence public.target_lists_id_seq to authenticated;
 grant all on sequence public.target_lists_id_seq to service_role;
+
+-- Goalkeeper schema (Phase 2) sequence grants
+grant all on sequence public.company_contacts_id_seq to anon;
+grant all on sequence public.company_contacts_id_seq to authenticated;
+grant all on sequence public.company_contacts_id_seq to service_role;
+
+grant all on sequence public.contact_social_profiles_id_seq to anon;
+grant all on sequence public.contact_social_profiles_id_seq to authenticated;
+grant all on sequence public.contact_social_profiles_id_seq to service_role;
+
+-- Goalkeeper schema (Phase 4) sequence grants (deal_modules has no identity seq)
+grant all on sequence public.activities_id_seq to anon;
+grant all on sequence public.activities_id_seq to authenticated;
+grant all on sequence public.activities_id_seq to service_role;
+
+-- Goalkeeper schema (Phase 2): private sync helpers are internal only.
+-- Revoke execute from PUBLIC; no grants to anon/authenticated/service_role.
+-- Triggers still invoke them (trigger execution does not check EXECUTE privilege).
+revoke execute on function private.gk_set_updated_at() from public;
+revoke execute on function private.gk_apply_primary_company(bigint) from public;
+revoke execute on function private.gk_set_primary_company_contact(bigint) from public;
+revoke execute on function private.gk_set_primary_company_for_contact(bigint, bigint) from public;
+revoke execute on function private.gk_sync_primary_company() from public;
+revoke execute on function private.gk_bridge_contact_company() from public;
+-- Phase 3 / 4 private helpers
+revoke execute on function private.gk_resolve_pipeline_stage(bigint, text) from public;
+revoke execute on function private.gk_sync_deal_stage() from public;
+revoke execute on function private.gk_check_deal_module_brand() from public;
+revoke execute on function private.gk_handle_activity_followup() from public;
 
 -- Default privileges
 alter default privileges for role postgres in schema public grant all on sequences to postgres;

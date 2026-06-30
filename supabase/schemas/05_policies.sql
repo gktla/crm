@@ -17,12 +17,21 @@ alter table public.favicons_excluded_domains enable row level security;
 -- Goalkeeper schema (Phase 1)
 alter table public.brands enable row level security;
 alter table public.pipeline_stages enable row level security;
-alter table public.leagues enable row level security;
+alter table public.org_types enable row level security;
 alter table public.nations enable row level security;
 alter table public.sports enable row level security;
 alter table public.target_lists enable row level security;
 alter table public.clubs enable row level security;
+alter table public.company_org_types enable row level security;
+alter table public.org_relationships enable row level security;
+alter table public.competitions enable row level security;
 alter table public.company_brands enable row level security;
+-- Goalkeeper schema (Phase 2)
+alter table public.company_contacts enable row level security;
+alter table public.contact_social_profiles enable row level security;
+-- Goalkeeper schema (Phase 3 / 4)
+alter table public.deal_modules enable row level security;
+alter table public.activities enable row level security;
 
 -- Companies
 create policy "Enable read access for authenticated users" on public.companies for select to authenticated using (true);
@@ -95,11 +104,11 @@ create policy "Enable insert for authenticated users only" on public.pipeline_st
 create policy "Enable update for authenticated users only" on public.pipeline_stages for update to authenticated using (true) with check (true);
 create policy "Pipeline Stages Delete Policy" on public.pipeline_stages for delete to authenticated using (true);
 
--- Leagues
-create policy "Enable read access for authenticated users" on public.leagues for select to authenticated using (true);
-create policy "Enable insert for authenticated users only" on public.leagues for insert to authenticated with check (true);
-create policy "Enable update for authenticated users only" on public.leagues for update to authenticated using (true) with check (true);
-create policy "Leagues Delete Policy" on public.leagues for delete to authenticated using (true);
+-- Org types
+create policy "Enable read access for authenticated users" on public.org_types for select to authenticated using (true);
+create policy "Enable insert for authenticated users only" on public.org_types for insert to authenticated with check (true);
+create policy "Enable update for authenticated users only" on public.org_types for update to authenticated using (true) with check (true);
+create policy "Org Types Delete Policy" on public.org_types for delete to authenticated using (true);
 
 -- Nations
 create policy "Enable read access for authenticated users" on public.nations for select to authenticated using (true);
@@ -125,8 +134,50 @@ create policy "Enable insert for authenticated users only" on public.clubs for i
 create policy "Enable update for authenticated users only" on public.clubs for update to authenticated using (true) with check (true);
 create policy "Clubs Delete Policy" on public.clubs for delete to authenticated using (true);
 
+-- Company org types
+create policy "Enable read access for authenticated users" on public.company_org_types for select to authenticated using (true);
+create policy "Enable insert for authenticated users only" on public.company_org_types for insert to authenticated with check (true);
+create policy "Enable update for authenticated users only" on public.company_org_types for update to authenticated using (true) with check (true);
+create policy "Company Org Types Delete Policy" on public.company_org_types for delete to authenticated using (true);
+
+-- Org relationships
+create policy "Enable read access for authenticated users" on public.org_relationships for select to authenticated using (true);
+create policy "Enable insert for authenticated users only" on public.org_relationships for insert to authenticated with check (true);
+create policy "Enable update for authenticated users only" on public.org_relationships for update to authenticated using (true) with check (true);
+create policy "Org Relationships Delete Policy" on public.org_relationships for delete to authenticated using (true);
+
+-- Competitions
+create policy "Enable read access for authenticated users" on public.competitions for select to authenticated using (true);
+create policy "Enable insert for authenticated users only" on public.competitions for insert to authenticated with check (true);
+create policy "Enable update for authenticated users only" on public.competitions for update to authenticated using (true) with check (true);
+create policy "Competitions Delete Policy" on public.competitions for delete to authenticated using (true);
+
 -- Company brands
 create policy "Enable read access for authenticated users" on public.company_brands for select to authenticated using (true);
 create policy "Enable insert for authenticated users only" on public.company_brands for insert to authenticated with check (true);
 create policy "Enable update for authenticated users only" on public.company_brands for update to authenticated using (true) with check (true);
 create policy "Company Brands Delete Policy" on public.company_brands for delete to authenticated using (true);
+
+-- Company contacts (Phase 2)
+create policy "Enable read access for authenticated users" on public.company_contacts for select to authenticated using (true);
+create policy "Enable insert for authenticated users only" on public.company_contacts for insert to authenticated with check (true);
+create policy "Enable update for authenticated users only" on public.company_contacts for update to authenticated using (true) with check (true);
+create policy "Company Contacts Delete Policy" on public.company_contacts for delete to authenticated using (true);
+
+-- Contact social profiles (Phase 2)
+create policy "Enable read access for authenticated users" on public.contact_social_profiles for select to authenticated using (true);
+create policy "Enable insert for authenticated users only" on public.contact_social_profiles for insert to authenticated with check (true);
+create policy "Enable update for authenticated users only" on public.contact_social_profiles for update to authenticated using (true) with check (true);
+create policy "Contact Social Profiles Delete Policy" on public.contact_social_profiles for delete to authenticated using (true);
+
+-- Deal modules (Phase 3)
+create policy "Enable read access for authenticated users" on public.deal_modules for select to authenticated using (true);
+create policy "Enable insert for authenticated users only" on public.deal_modules for insert to authenticated with check (true);
+create policy "Enable update for authenticated users only" on public.deal_modules for update to authenticated using (true) with check (true);
+create policy "Deal Modules Delete Policy" on public.deal_modules for delete to authenticated using (true);
+
+-- Activities (Phase 4)
+create policy "Enable read access for authenticated users" on public.activities for select to authenticated using (true);
+create policy "Enable insert for authenticated users only" on public.activities for insert to authenticated with check (true);
+create policy "Enable update for authenticated users only" on public.activities for update to authenticated using (true) with check (true);
+create policy "Activities Delete Policy" on public.activities for delete to authenticated using (true);
