@@ -14,7 +14,10 @@ select
     null::json as contact,
     null::json as deal,
     null::json as contact_note,
-    null::json as deal_note
+    null::json as deal_note,
+    -- Goalkeeper schema (Phase 8): activities appended as a new column so the
+    -- existing leading columns are preserved under CREATE OR REPLACE.
+    null::json as activity
 from public.companies c
 union all
 select
@@ -27,7 +30,8 @@ select
     to_json(co.*) as contact,
     null::json as deal,
     null::json as contact_note,
-    null::json as deal_note
+    null::json as deal_note,
+    null::json as activity
 from public.contacts co
 union all
 select
@@ -40,7 +44,8 @@ select
     null::json as contact,
     null::json as deal,
     to_json(cn.*) as contact_note,
-    null::json as deal_note
+    null::json as deal_note,
+    null::json as activity
 from public.contact_notes cn
     left join public.contacts co on co.id = cn.contact_id
 union all
@@ -54,7 +59,8 @@ select
     null::json as contact,
     to_json(d.*) as deal,
     null::json as contact_note,
-    null::json as deal_note
+    null::json as deal_note,
+    null::json as activity
 from public.deals d
 union all
 select
@@ -67,9 +73,46 @@ select
     null::json as contact,
     null::json as deal,
     null::json as contact_note,
-    to_json(dn.*) as deal_note
+    to_json(dn.*) as deal_note,
+    null::json as activity
 from public.deal_notes dn
-    left join public.deals d on d.id = dn.deal_id;
+    left join public.deals d on d.id = dn.deal_id
+union all
+select
+    ('activity.' || a.id || '.created') as id,
+    'activity.created' as type,
+    a.occurred_at as date,
+    a.company_id,
+    a.sales_id,
+    null::json as company,
+    null::json as contact,
+    null::json as deal,
+    null::json as contact_note,
+    null::json as deal_note,
+    to_json(a.*) as activity
+from public.activities a;
+
+-- Goalkeeper schema (Phase 8): current_squad (Decision C) — "physically at the
+-- club now" = (owned AND NOT loaned_out) OR loaned_in.
+create or replace view public.current_squad with (security_invoker = on) as
+select distinct
+    poa.player_id,
+    poa.org_id
+from public.player_org_assignments poa
+where poa.is_current
+  and (
+    poa.relationship_type = 'loaned_in'
+    or (
+      poa.relationship_type = 'owned'
+      and not exists (
+        select 1 from public.player_org_assignments lo
+        where lo.player_id = poa.player_id
+          and lo.org_id = poa.org_id
+          and lo.relationship_type = 'loaned_out'
+          and lo.is_current
+      )
+    )
+  );
 
 create or replace view public.companies_summary with (security_invoker = on) as
 select

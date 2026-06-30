@@ -32,6 +32,16 @@ alter table public.contact_social_profiles enable row level security;
 -- Goalkeeper schema (Phase 3 / 4)
 alter table public.deal_modules enable row level security;
 alter table public.activities enable row level security;
+-- Goalkeeper schema (Phase 6/7)
+alter table public.players enable row level security;
+alter table public.player_org_assignments enable row level security;
+alter table public.player_citizenships enable row level security;
+alter table public.player_representations enable row level security;
+alter table public.player_social_profiles enable row level security;
+alter table public.player_target_lists enable row level security;
+alter table public.teams enable row level security;
+alter table public.team_sports enable row level security;
+alter table public.org_target_lists enable row level security;
 
 -- Companies
 create policy "Enable read access for authenticated users" on public.companies for select to authenticated using (true);
@@ -181,3 +191,57 @@ create policy "Enable read access for authenticated users" on public.activities 
 create policy "Enable insert for authenticated users only" on public.activities for insert to authenticated with check (true);
 create policy "Enable update for authenticated users only" on public.activities for update to authenticated using (true) with check (true);
 create policy "Activities Delete Policy" on public.activities for delete to authenticated using (true);
+
+-- Players (Phase 6)
+create policy "Enable read access for authenticated users" on public.players for select to authenticated using (true);
+create policy "Enable insert for authenticated users only" on public.players for insert to authenticated with check (true);
+create policy "Enable update for authenticated users only" on public.players for update to authenticated using (true) with check (true);
+create policy "Players Delete Policy" on public.players for delete to authenticated using (true);
+
+-- Player org assignments (Phase 6)
+create policy "Enable read access for authenticated users" on public.player_org_assignments for select to authenticated using (true);
+create policy "Enable insert for authenticated users only" on public.player_org_assignments for insert to authenticated with check (true);
+create policy "Enable update for authenticated users only" on public.player_org_assignments for update to authenticated using (true) with check (true);
+create policy "Player Org Assignments Delete Policy" on public.player_org_assignments for delete to authenticated using (true);
+
+-- Player citizenships (Phase 6)
+create policy "Enable read access for authenticated users" on public.player_citizenships for select to authenticated using (true);
+create policy "Enable insert for authenticated users only" on public.player_citizenships for insert to authenticated with check (true);
+create policy "Enable update for authenticated users only" on public.player_citizenships for update to authenticated using (true) with check (true);
+create policy "Player Citizenships Delete Policy" on public.player_citizenships for delete to authenticated using (true);
+
+-- Player representations (Phase 6)
+create policy "Enable read access for authenticated users" on public.player_representations for select to authenticated using (true);
+create policy "Enable insert for authenticated users only" on public.player_representations for insert to authenticated with check (true);
+create policy "Enable update for authenticated users only" on public.player_representations for update to authenticated using (true) with check (true);
+create policy "Player Representations Delete Policy" on public.player_representations for delete to authenticated using (true);
+
+-- Player social profiles (Phase 6)
+create policy "Enable read access for authenticated users" on public.player_social_profiles for select to authenticated using (true);
+create policy "Enable insert for authenticated users only" on public.player_social_profiles for insert to authenticated with check (true);
+create policy "Enable update for authenticated users only" on public.player_social_profiles for update to authenticated using (true) with check (true);
+create policy "Player Social Profiles Delete Policy" on public.player_social_profiles for delete to authenticated using (true);
+
+-- Player target lists (Phase 6)
+create policy "Enable read access for authenticated users" on public.player_target_lists for select to authenticated using (true);
+create policy "Enable insert for authenticated users only" on public.player_target_lists for insert to authenticated with check (true);
+create policy "Enable update for authenticated users only" on public.player_target_lists for update to authenticated using (true) with check (true);
+create policy "Player Target Lists Delete Policy" on public.player_target_lists for delete to authenticated using (true);
+
+-- Teams (Phase 7)
+create policy "Enable read access for authenticated users" on public.teams for select to authenticated using (true);
+create policy "Enable insert for authenticated users only" on public.teams for insert to authenticated with check (true);
+create policy "Enable update for authenticated users only" on public.teams for update to authenticated using (true) with check (true);
+create policy "Teams Delete Policy" on public.teams for delete to authenticated using (true);
+
+-- Team sports (Phase 7)
+create policy "Enable read access for authenticated users" on public.team_sports for select to authenticated using (true);
+create policy "Enable insert for authenticated users only" on public.team_sports for insert to authenticated with check (true);
+create policy "Enable update for authenticated users only" on public.team_sports for update to authenticated using (true) with check (true);
+create policy "Team Sports Delete Policy" on public.team_sports for delete to authenticated using (true);
+
+-- Org target lists (Phase 7)
+create policy "Enable read access for authenticated users" on public.org_target_lists for select to authenticated using (true);
+create policy "Enable insert for authenticated users only" on public.org_target_lists for insert to authenticated with check (true);
+create policy "Enable update for authenticated users only" on public.org_target_lists for update to authenticated using (true) with check (true);
+create policy "Org Target Lists Delete Policy" on public.org_target_lists for delete to authenticated using (true);

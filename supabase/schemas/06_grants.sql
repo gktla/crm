@@ -171,10 +171,51 @@ grant all on table public.activities to anon;
 grant all on table public.activities to authenticated;
 grant all on table public.activities to service_role;
 
+-- Goalkeeper schema (Phase 6/7) table grants
+grant all on table public.players to anon;
+grant all on table public.players to authenticated;
+grant all on table public.players to service_role;
+
+grant all on table public.player_org_assignments to anon;
+grant all on table public.player_org_assignments to authenticated;
+grant all on table public.player_org_assignments to service_role;
+
+grant all on table public.player_citizenships to anon;
+grant all on table public.player_citizenships to authenticated;
+grant all on table public.player_citizenships to service_role;
+
+grant all on table public.player_representations to anon;
+grant all on table public.player_representations to authenticated;
+grant all on table public.player_representations to service_role;
+
+grant all on table public.player_social_profiles to anon;
+grant all on table public.player_social_profiles to authenticated;
+grant all on table public.player_social_profiles to service_role;
+
+grant all on table public.player_target_lists to anon;
+grant all on table public.player_target_lists to authenticated;
+grant all on table public.player_target_lists to service_role;
+
+grant all on table public.teams to anon;
+grant all on table public.teams to authenticated;
+grant all on table public.teams to service_role;
+
+grant all on table public.team_sports to anon;
+grant all on table public.team_sports to authenticated;
+grant all on table public.team_sports to service_role;
+
+grant all on table public.org_target_lists to anon;
+grant all on table public.org_target_lists to authenticated;
+grant all on table public.org_target_lists to service_role;
+
 -- View grants
 grant all on table public.activity_log to anon;
 grant all on table public.activity_log to authenticated;
 grant all on table public.activity_log to service_role;
+
+grant all on table public.current_squad to anon;
+grant all on table public.current_squad to authenticated;
+grant all on table public.current_squad to service_role;
 
 grant all on table public.companies_summary to anon;
 grant all on table public.companies_summary to authenticated;
@@ -268,6 +309,27 @@ grant all on sequence public.contact_social_profiles_id_seq to service_role;
 grant all on sequence public.activities_id_seq to anon;
 grant all on sequence public.activities_id_seq to authenticated;
 grant all on sequence public.activities_id_seq to service_role;
+
+-- Goalkeeper schema (Phase 6/7) sequence grants
+grant all on sequence public.players_id_seq to anon;
+grant all on sequence public.players_id_seq to authenticated;
+grant all on sequence public.players_id_seq to service_role;
+
+grant all on sequence public.player_org_assignments_id_seq to anon;
+grant all on sequence public.player_org_assignments_id_seq to authenticated;
+grant all on sequence public.player_org_assignments_id_seq to service_role;
+
+grant all on sequence public.player_representations_id_seq to anon;
+grant all on sequence public.player_representations_id_seq to authenticated;
+grant all on sequence public.player_representations_id_seq to service_role;
+
+grant all on sequence public.player_social_profiles_id_seq to anon;
+grant all on sequence public.player_social_profiles_id_seq to authenticated;
+grant all on sequence public.player_social_profiles_id_seq to service_role;
+
+grant all on sequence public.teams_id_seq to anon;
+grant all on sequence public.teams_id_seq to authenticated;
+grant all on sequence public.teams_id_seq to service_role;
 
 -- Goalkeeper schema (Phase 2): private sync helpers are internal only.
 -- Revoke execute from PUBLIC; no grants to anon/authenticated/service_role.
