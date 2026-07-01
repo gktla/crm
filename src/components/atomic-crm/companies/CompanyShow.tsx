@@ -1,4 +1,9 @@
 import { ReferenceManyField } from "@/components/admin/reference-many-field";
+import { ReferenceField } from "@/components/admin/reference-field";
+import { TextField } from "@/components/admin/text-field";
+import { NumberField } from "@/components/admin/number-field";
+import { DateField } from "@/components/admin/date-field";
+import { Badge } from "@/components/ui/badge";
 import { SortButton } from "@/components/admin/sort-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -117,6 +122,7 @@ const CompanyShowContent = () => {
               <CompanyAvatar />
               <h5 className="text-xl ml-2 flex-1">{record.name}</h5>
             </div>
+            <CompanyOrgProfile />
             <Tabs defaultValue={currentTab} onValueChange={handleTabChange}>
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="activity">
@@ -184,6 +190,80 @@ const CompanyShowContent = () => {
       </div>
       <CompanyAside />
     </div>
+  );
+};
+
+// Goalkeeper org-centric profile: the org's types (from the company_org_types
+// junction) and, when the org is a club, its 1:1 clubs extension.
+const CompanyOrgProfile = () => {
+  const record = useRecordContext<Company>();
+  if (!record) return null;
+  return (
+    <div className="flex flex-col gap-2 mb-4 text-sm">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="text-muted-foreground">Org types:</span>
+        <ReferenceManyField reference="company_org_types" target="company_id">
+          <OrgTypeBadges />
+        </ReferenceManyField>
+      </div>
+      <ReferenceManyField reference="clubs" target="company_id">
+        <ClubDetails />
+      </ReferenceManyField>
+    </div>
+  );
+};
+
+const OrgTypeBadges = () => {
+  const { data, isPending } = useListContext();
+  if (isPending) return null;
+  if (!data?.length) return <span className="text-muted-foreground">—</span>;
+  return (
+    <>
+      {data.map((row) => (
+        <RecordContextProvider key={JSON.stringify(row.id)} value={row}>
+          <Badge variant="secondary">
+            <ReferenceField
+              source="org_type_id"
+              reference="org_types"
+              link={false}
+            />
+          </Badge>
+        </RecordContextProvider>
+      ))}
+    </>
+  );
+};
+
+const ClubDetails = () => {
+  const { data, isPending } = useListContext();
+  if (isPending || !data?.length) return null; // company is not a club
+  return (
+    <RecordContextProvider value={data[0]}>
+      <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 rounded-md border p-3 w-fit">
+        <span className="text-muted-foreground">League</span>
+        <ReferenceField
+          source="league_company_id"
+          reference="companies"
+          link="show"
+          empty="—"
+        />
+        <span className="text-muted-foreground">Nation</span>
+        <ReferenceField
+          source="nation_id"
+          reference="nations"
+          link={false}
+          empty="—"
+        />
+        <span className="text-muted-foreground">Keepers</span>
+        <NumberField source="keeper_count" />
+        <span className="text-muted-foreground">xG status</span>
+        <TextField source="xg_status" empty="—" />
+        <span className="text-muted-foreground">Hit list</span>
+        <span>{data[0].hit_list ? "Yes" : "No"}</span>
+        <span className="text-muted-foreground">Contract end</span>
+        <DateField source="contract_end" empty="—" />
+      </div>
+    </RecordContextProvider>
   );
 };
 

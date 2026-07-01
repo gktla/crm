@@ -20,12 +20,29 @@ import { ATTACHMENTS_BUCKET } from "../commons/attachments";
 import { getIsInitialized } from "./authProvider";
 import { getSupabaseClient } from "./supabase";
 
+// Goalkeeper schema: react-admin/PostgREST assumes a single `id` PK. Our extension
+// (1:1) and junction (composite) tables don't have one, so we declare their real
+// primary keys here. Tables with an `id` identity column use the default and are omitted.
+const gkPrimaryKeys = new Map<string, string[]>([
+  ["clubs", ["company_id"]],
+  ["competitions", ["company_id"]],
+  ["company_org_types", ["company_id", "org_type_id"]],
+  ["company_brands", ["company_id", "brand_id"]],
+  ["team_sports", ["team_id", "sport_id"]],
+  ["player_citizenships", ["player_id", "nation_id"]],
+  ["player_target_lists", ["target_list_id", "player_id"]],
+  ["org_target_lists", ["target_list_id", "company_id"]],
+  ["deal_modules", ["deal_id", "module"]],
+  ["current_squad", ["player_id", "org_id"]],
+]);
+
 const getBaseDataProvider = () =>
   supabaseDataProvider({
     instanceUrl: import.meta.env.VITE_SUPABASE_URL,
     apiKey: import.meta.env.VITE_SB_PUBLISHABLE_KEY,
     supabaseClient: getSupabaseClient(),
     sortOrder: "asc,desc.nullslast" as any,
+    primaryKeys: gkPrimaryKeys,
   });
 
 const processCompanyLogo = async (params: any) => {

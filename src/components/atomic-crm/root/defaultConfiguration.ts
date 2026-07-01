@@ -21,16 +21,23 @@ export const defaultCompanySectors = [
   { value: "utilities", label: "Utilities" },
 ];
 
+// Goalkeeper: the pipeline board must use the xG brand's pipeline_stages slugs so
+// the deals stage<->stage_id trigger resolves every column (Lost/Delayed have no xG
+// stage and would fail on move). Multi-brand switching is a later milestone (M2-1);
+// for now the board is the xG pipeline. Keep in sync with the xG rows seeded in the
+// gk_catalogs migration.
 export const defaultDealStages = [
-  { value: "opportunity", label: "Opportunity" },
+  { value: "target", label: "Target" },
+  { value: "initial-conversation", label: "Initial Conversation" },
+  { value: "re-engage", label: "Re Engage" },
+  { value: "demo", label: "Demo" },
+  { value: "qualified-to-buy", label: "Qualified To Buy" },
   { value: "proposal-sent", label: "Proposal Sent" },
-  { value: "in-negociation", label: "In Negotiation" },
-  { value: "won", label: "Won" },
-  { value: "lost", label: "Lost" },
-  { value: "delayed", label: "Delayed" },
+  { value: "decision-maker-bought-in", label: "Decision Maker Bought-In" },
+  { value: "closed-won", label: "Closed Won" },
 ];
 
-export const defaultDealPipelineStatuses = ["won"];
+export const defaultDealPipelineStatuses = ["closed-won"];
 
 export const defaultDealCategories = [
   { value: "other", label: "Other" },

@@ -275,6 +275,24 @@ const DesktopAdmin = (
       <Resource name="tasks" />
       <Resource name="sales" {...sales} />
       <Resource name="tags" />
+      {/* Goalkeeper schema (org-centric). Registered name-only for now: enables the
+          data provider + reference fields; bespoke UI per screen comes later (M2+). */}
+      <Resource name="org_types" recordRepresentation="name" />
+      <Resource name="brands" recordRepresentation="name" />
+      <Resource name="pipeline_stages" recordRepresentation="name" />
+      <Resource name="nations" recordRepresentation="name" />
+      <Resource name="sports" recordRepresentation="name" />
+      <Resource name="target_lists" recordRepresentation="name" />
+      <Resource name="clubs" />
+      <Resource name="competitions" />
+      <Resource name="company_contacts" />
+      <Resource name="activities" />
+      <Resource name="players" recordRepresentation="full_name" />
+      <Resource name="player_org_assignments" />
+      <Resource name="player_representations" />
+      <Resource name="teams" recordRepresentation="name" />
+      <Resource name="org_relationships" />
+      <Resource name="deal_modules" />
     </Admin>
   );
 };
