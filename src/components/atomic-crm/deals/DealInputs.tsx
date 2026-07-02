@@ -1,4 +1,5 @@
-import { required, useTranslate } from "ra-core";
+import { required, useGetList, useTranslate } from "ra-core";
+import { useWatch } from "react-hook-form";
 import { AutocompleteArrayInput } from "@/components/admin/autocomplete-array-input";
 import { ReferenceArrayInput } from "@/components/admin/reference-array-input";
 import { ReferenceInput } from "@/components/admin/reference-input";
@@ -64,14 +65,39 @@ const DealLinkedToInputs = () => {
 };
 
 const DealMiscInputs = () => {
-  const { dealStages, dealCategories } = useConfigurationContext();
+  const { dealCategories } = useConfigurationContext();
   const translate = useTranslate();
+  const { data: brands } = useGetList("brands", {
+    pagination: { page: 1, perPage: 50 },
+    sort: { field: "id", order: "ASC" },
+  });
+  const { data: pipelineStages } = useGetList("pipeline_stages", {
+    pagination: { page: 1, perPage: 200 },
+    sort: { field: "position", order: "ASC" },
+  });
+  const brandId = useWatch({ name: "brand_id" });
+  // Stage choices depend on the selected brand (xG has 8 stages, Onesport 6).
+  // Compare as strings: the SelectInput stores brand_id as a string while
+  // pipeline_stages.brand_id is a number.
+  const stageChoices = brandId
+    ? (pipelineStages ?? []).filter(
+        (s) => String(s.brand_id) === String(brandId),
+      )
+    : [];
   return (
     <div className="flex flex-col gap-4 flex-1">
       <h3 className="text-base font-medium">
         {translate("resources.deals.field_categories.misc")}
       </h3>
 
+      <SelectInput
+        source="brand_id"
+        choices={brands ?? []}
+        optionText="name"
+        optionValue="id"
+        helperText={false}
+        validate={required()}
+      />
       <SelectInput
         source="category"
         choices={dealCategories}
@@ -85,18 +111,12 @@ const DealMiscInputs = () => {
         helperText={false}
         validate={required()}
       />
-      <DateInput
-        validate={required()}
-        source="expected_closing_date"
-        helperText={false}
-        defaultValue={new Date().toISOString().split("T")[0]}
-      />
+      <DateInput source="expected_closing_date" helperText={false} />
       <SelectInput
         source="stage"
-        choices={dealStages}
-        optionText="label"
-        optionValue="value"
-        defaultValue="opportunity"
+        choices={stageChoices}
+        optionText="name"
+        optionValue="slug"
         helperText={false}
         validate={required()}
       />

@@ -27,7 +27,7 @@ import { NotesIterator } from "../notes/NotesIterator";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Deal } from "../types";
 import { ContactList } from "./ContactList";
-import { findDealLabel, formatISODateString } from "./dealUtils";
+import { formatISODateString } from "./dealUtils";
 
 export const DealShow = ({ open, id }: { open: boolean; id?: string }) => {
   const redirect = useRedirect();
@@ -50,7 +50,7 @@ export const DealShow = ({ open, id }: { open: boolean; id?: string }) => {
 
 const DealShowContent = () => {
   const translate = useTranslate();
-  const { dealStages, dealCategories, currency } = useConfigurationContext();
+  const { dealCategories, currency } = useConfigurationContext();
   const record = useRecordContext<Deal>();
   if (!record) return null;
 
@@ -139,10 +139,29 @@ const DealShowContent = () => {
 
             <div className="flex flex-col mr-10">
               <span className="text-xs text-muted-foreground tracking-wide">
+                Brand
+              </span>
+              <span className="text-sm">
+                <ReferenceField
+                  record={record}
+                  source="brand_id"
+                  reference="brands"
+                  link={false}
+                />
+              </span>
+            </div>
+
+            <div className="flex flex-col mr-10">
+              <span className="text-xs text-muted-foreground tracking-wide">
                 {translate("resources.deals.fields.stage")}
               </span>
               <span className="text-sm">
-                {findDealLabel(dealStages, record.stage)}
+                <ReferenceField
+                  record={record}
+                  source="stage_id"
+                  reference="pipeline_stages"
+                  link={false}
+                />
               </span>
             </div>
           </div>

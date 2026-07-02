@@ -117,6 +117,12 @@ export type Deal = {
   contact_ids: Identifier[];
   category: string;
   stage: string;
+  // Goalkeeper org-centric schema: brand + relational stage (source of truth).
+  // Optional so the FakeRest demo generator (no brands) still satisfies the type.
+  brand_id?: Identifier;
+  stage_id?: Identifier;
+  probability?: number;
+  legacy_ref?: string;
   description: string;
   amount: number;
   created_at: string;
