@@ -124,7 +124,13 @@ const CompanyShowContent = () => {
             </div>
             <CompanyOrgProfile />
             <Tabs defaultValue={currentTab} onValueChange={handleTabChange}>
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList
+                className={
+                  record.nb_deals
+                    ? "grid w-full grid-cols-4"
+                    : "grid w-full grid-cols-3"
+                }
+              >
                 <TabsTrigger value="activity">
                   {translate("crm.common.activity")}
                 </TabsTrigger>
@@ -135,6 +141,7 @@ const CompanyShowContent = () => {
                         smart_count: record.nb_contacts ?? 0,
                       })}
                 </TabsTrigger>
+                <TabsTrigger value="staff">Staff</TabsTrigger>
                 {record.nb_deals ? (
                   <TabsTrigger value="deals">
                     {translate("resources.companies.nb_deals", {
@@ -173,6 +180,15 @@ const CompanyShowContent = () => {
                   </div>
                 )}
               </TabsContent>
+              <TabsContent value="staff" className="pt-2">
+                <ReferenceManyField
+                  reference="company_contacts"
+                  target="company_id"
+                  sort={{ field: "role", order: "ASC" }}
+                >
+                  <StaffIterator />
+                </ReferenceManyField>
+              </TabsContent>
               <TabsContent value="deals">
                 {record.nb_deals ? (
                   <ReferenceManyField
@@ -209,6 +225,59 @@ const CompanyOrgProfile = () => {
       <ReferenceManyField reference="clubs" target="company_id">
         <ClubDetails />
       </ReferenceManyField>
+    </div>
+  );
+};
+
+// Full technical staff for the org, from the company_contacts junction (role,
+// title, Instagram) — broader than the Contacts tab, which only shows contacts
+// whose company_id mirror points here.
+const CC_ROLE_LABEL: Record<string, string> = {
+  sporting_director: "Sporting Director",
+  head_of_recruitment: "Head of Recruitment",
+  gk_coach: "GK Coach",
+  head_coach: "Head Coach",
+  analyst: "Analyst",
+  scout: "Scout",
+  manager: "Manager",
+  ceo: "CEO",
+  sports_secretary: "Sports Secretary",
+  agent: "Agent",
+  other: "Other",
+};
+
+const StaffIterator = () => {
+  const { data, isPending } = useListContext();
+  if (isPending) return null;
+  if (!data?.length)
+    return (
+      <p className="text-sm text-muted-foreground py-4">
+        No staff recorded yet.
+      </p>
+    );
+  return (
+    <div className="flex flex-col gap-2 py-2">
+      {data.map((cc) => (
+        <div
+          key={JSON.stringify(cc.id)}
+          className="flex flex-row flex-wrap items-center gap-2 text-sm"
+        >
+          <RecordContextProvider value={cc}>
+            <ReferenceField
+              source="contact_id"
+              reference="contacts"
+              link="show"
+            />
+          </RecordContextProvider>
+          <Badge variant="secondary">{CC_ROLE_LABEL[cc.role] ?? cc.role}</Badge>
+          {cc.title ? (
+            <span className="text-muted-foreground">{cc.title}</span>
+          ) : null}
+          {cc.instagram_status ? (
+            <Badge variant="outline">{cc.instagram_status}</Badge>
+          ) : null}
+        </div>
+      ))}
     </div>
   );
 };

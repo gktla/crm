@@ -31,6 +31,7 @@ import {
   getDataProvider as defaultDataProviderBuilder,
 } from "../providers/supabase";
 import sales from "../sales";
+import players from "../players";
 import { SettingsPageMobile } from "../settings/SettingsPageMobile";
 import { ProfilePage } from "../settings/ProfilePage";
 import { SettingsPage } from "../settings/SettingsPage";
@@ -287,7 +288,7 @@ const DesktopAdmin = (
       <Resource name="competitions" />
       <Resource name="company_contacts" />
       <Resource name="activities" />
-      <Resource name="players" recordRepresentation="full_name" />
+      <Resource name="players" {...players} />
       <Resource name="player_org_assignments" />
       <Resource name="player_representations" />
       <Resource name="teams" recordRepresentation="name" />

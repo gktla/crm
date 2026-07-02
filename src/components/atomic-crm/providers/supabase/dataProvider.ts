@@ -370,6 +370,12 @@ const lifeCycleCallbacks: ResourceCallbacks[] = [
       return applyFullTextSearch(["name", "category", "description"])(params);
     },
   },
+  {
+    resource: "players",
+    beforeGetList: async (params) => {
+      return applyFullTextSearch(["full_name", "status"])(params);
+    },
+  },
 ];
 
 export const getDataProvider = () => {
