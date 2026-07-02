@@ -3,24 +3,22 @@ import isEqual from "lodash/isEqual";
 import { useDataProvider, useListContext, type DataProvider } from "ra-core";
 import { useEffect, useState } from "react";
 
-import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Deal } from "../types";
 import { DealColumn } from "./DealColumn";
-import type { DealsByStage } from "./stages";
+import type { DealsByStage, StageChoice } from "./stages";
 import { getDealsByStage } from "./stages";
 
-export const DealListContent = () => {
-  const { dealStages } = useConfigurationContext();
+export const DealListContent = ({ stages }: { stages: StageChoice[] }) => {
   const { data: unorderedDeals, isPending, refetch } = useListContext<Deal>();
   const dataProvider = useDataProvider();
 
   const [dealsByStage, setDealsByStage] = useState<DealsByStage>(
-    getDealsByStage([], dealStages),
+    getDealsByStage([], stages),
   );
 
   useEffect(() => {
     if (unorderedDeals) {
-      const newDealsByStage = getDealsByStage(unorderedDeals, dealStages);
+      const newDealsByStage = getDealsByStage(unorderedDeals, stages);
       if (!isEqual(newDealsByStage, dealsByStage)) {
         setDealsByStage(newDealsByStage);
       }
@@ -73,9 +71,10 @@ export const DealListContent = () => {
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="flex gap-4">
-        {dealStages.map((stage) => (
+        {stages.map((stage) => (
           <DealColumn
             stage={stage.value}
+            label={stage.label}
             deals={dealsByStage[stage.value]}
             key={stage.value}
           />

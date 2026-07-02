@@ -91,16 +91,22 @@ const DealShowContent = () => {
                 {translate("resources.deals.fields.expected_closing_date")}
               </span>
               <div className="flex items-center gap-2">
-                <span className="text-sm">
-                  {isValid(new Date(record.expected_closing_date))
-                    ? formatISODateString(record.expected_closing_date)
-                    : translate("resources.deals.invalid_date")}
-                </span>
-                {new Date(record.expected_closing_date) < new Date() ? (
-                  <Badge variant="destructive">
-                    {translate("crm.common.past")}
-                  </Badge>
-                ) : null}
+                {record.expected_closing_date ? (
+                  <>
+                    <span className="text-sm">
+                      {isValid(new Date(record.expected_closing_date))
+                        ? formatISODateString(record.expected_closing_date)
+                        : translate("resources.deals.invalid_date")}
+                    </span>
+                    {new Date(record.expected_closing_date) < new Date() ? (
+                      <Badge variant="destructive">
+                        {translate("crm.common.past")}
+                      </Badge>
+                    ) : null}
+                  </>
+                ) : (
+                  <span className="text-sm text-muted-foreground">—</span>
+                )}
               </div>
             </div>
 

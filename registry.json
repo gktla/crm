@@ -338,6 +338,18 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/players/index.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/players/PlayerShow.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/players/PlayerList.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/notes/utils.ts",
           "type": "registry:component"
         },

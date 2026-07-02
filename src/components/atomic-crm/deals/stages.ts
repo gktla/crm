@@ -1,11 +1,13 @@
-import type { ConfigurationContextValue } from "../root/ConfigurationContext";
 import type { Deal } from "../types";
 
 export type DealsByStage = Record<Deal["stage"], Deal[]>;
 
+/** A pipeline column: the stage slug (`value`) + its display label. */
+export type StageChoice = { value: string; label: string };
+
 export const getDealsByStage = (
   unorderedDeals: Deal[],
-  dealStages: ConfigurationContextValue["dealStages"],
+  dealStages: StageChoice[],
 ) => {
   if (!dealStages) return {};
   const dealsByStage: Record<Deal["stage"], Deal[]> = unorderedDeals.reduce(

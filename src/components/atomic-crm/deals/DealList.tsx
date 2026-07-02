@@ -1,7 +1,13 @@
-import type { ReactNode } from "react";
-import type { InputProps } from "ra-core";
-import { useGetIdentity, useListContext, useTranslate } from "ra-core";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import type { Identifier, InputProps } from "ra-core";
+import {
+  useGetIdentity,
+  useGetList,
+  useListContext,
+  useTranslate,
+} from "ra-core";
 import { matchPath, useLocation } from "react-router";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AutocompleteInput } from "@/components/admin/autocomplete-input";
 import { CreateButton } from "@/components/admin/create-button";
 import { ExportButton } from "@/components/admin/export-button";
@@ -20,13 +26,47 @@ import { DealEmpty } from "./DealEmpty";
 import { DealListContent } from "./DealListContent";
 import { DealShow } from "./DealShow";
 import { OnlyMineInput } from "./OnlyMineInput";
+import type { StageChoice } from "./stages";
 
 const DealList = () => {
   const { identity } = useGetIdentity();
   const { dealCategories } = useConfigurationContext();
   const translate = useTranslate();
 
-  if (!identity) return null;
+  // Brand-aware pipeline: columns come from pipeline_stages (per brand), not the
+  // legacy global dealStages config. Tabs switch the active brand.
+  const { data: brands } = useGetList("brands", {
+    pagination: { page: 1, perPage: 50 },
+    sort: { field: "id", order: "ASC" },
+  });
+  const { data: pipelineStages } = useGetList("pipeline_stages", {
+    pagination: { page: 1, perPage: 200 },
+    sort: { field: "position", order: "ASC" },
+  });
+  const [brandId, setBrandId] = useState<Identifier | null>(null);
+
+  const stagesByBrand = useMemo(() => {
+    const map = new Map<Identifier, StageChoice[]>();
+    (pipelineStages ?? []).forEach((s) => {
+      const list = map.get(s.brand_id) ?? [];
+      list.push({ value: s.slug, label: s.name });
+      map.set(s.brand_id, list);
+    });
+    return map;
+  }, [pipelineStages]);
+
+  const brandTabs = useMemo(
+    () => (brands ?? []).filter((b) => stagesByBrand.has(b.id)),
+    [brands, stagesByBrand],
+  );
+
+  useEffect(() => {
+    if (brandId == null && brandTabs.length) setBrandId(brandTabs[0].id);
+  }, [brandTabs, brandId]);
+
+  if (!identity || brandId == null) return null;
+
+  const stages = stagesByBrand.get(brandId) ?? [];
 
   const dealFilters = [
     <SearchInput source="q" alwaysOn />,
@@ -50,21 +90,37 @@ const DealList = () => {
   ];
 
   return (
-    <List
-      perPage={100}
-      filter={{ "archived_at@is": null }}
-      title={false}
-      sort={{ field: "index", order: "DESC" }}
-      filters={dealFilters}
-      actions={<DealActions />}
-      pagination={null}
-    >
-      <DealLayout />
-    </List>
+    <div className="w-full">
+      <Tabs
+        value={String(brandId)}
+        onValueChange={(v) => setBrandId(Number(v))}
+        className="mb-4"
+      >
+        <TabsList>
+          {brandTabs.map((b) => (
+            <TabsTrigger key={String(b.id)} value={String(b.id)}>
+              {b.name}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+      <List
+        key={String(brandId)}
+        perPage={500}
+        filter={{ brand_id: brandId, "archived_at@is": null }}
+        title={false}
+        sort={{ field: "index", order: "DESC" }}
+        filters={dealFilters}
+        actions={<DealActions />}
+        pagination={null}
+      >
+        <DealLayout stages={stages} />
+      </List>
+    </div>
   );
 };
 
-const DealLayout = () => {
+const DealLayout = ({ stages }: { stages: StageChoice[] }) => {
   const location = useLocation();
   const matchCreate = matchPath("/deals/create", location.pathname);
   const matchShow = matchPath("/deals/:id/show", location.pathname);
@@ -86,7 +142,7 @@ const DealLayout = () => {
 
   return (
     <div className="w-full">
-      <DealListContent />
+      <DealListContent stages={stages} />
       <DealArchivedList />
       <DealCreate open={!!matchCreate} />
       <DealEdit open={!!matchEdit && !matchCreate} id={matchEdit?.params.id} />
