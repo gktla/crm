@@ -1,0 +1,250 @@
+// Stage 1 — orgs foundation. Emits idempotent SQL to STDOUT:
+//   nations seed · league-orgs (+competitions) · companies (436 merged orgs,
+//   Coda ⊕ vibecoded) · company_org_types · clubs rows.
+// Keyed by slug (= normalized merge key) / legacy_ref / clubs.coda_row_id.
+//
+// Usage: node scripts/etl/stage1-orgs.mjs <codaClubsCsv> <vibeDbUrl> > stage1.sql
+
+import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import Papa from "papaparse";
+import { orgKey } from "./lib/normalize.mjs";
+import { sqlStr, sqlInt, sqlBool, slugify } from "./lib/sql.mjs";
+
+const CODA_CLUBS_CSV = process.argv[2];
+const VIBE_DB = process.argv[3];
+
+const NATION = {
+  ENG: "England",
+  SCO: "Scotland",
+  USA: "United States",
+  CAN: "Canada",
+  MEX: "Mexico",
+  NED: "Netherlands",
+  SER: "Serbia",
+  ARG: "Argentina",
+};
+
+const parse = (t) =>
+  Papa.parse(t.trim(), { header: true, skipEmptyLines: true }).data;
+
+// psql --csv -t drops the header, so prepend our own.
+const query = (cols, table) =>
+  parse(
+    cols.join(",") +
+      "\n" +
+      execFileSync(
+        "psql",
+        [
+          VIBE_DB,
+          "--csv",
+          "-t",
+          "-c",
+          `select ${cols.join(",")} from ${table}`,
+        ],
+        {
+          encoding: "utf8",
+        },
+      ),
+  );
+
+// --- Coda clubs, distinct by orgKey (pick the "best" row for dup names) ---
+const codaRaw = parse(readFileSync(CODA_CLUBS_CSV, "utf8"));
+const codaByKey = new Map();
+for (const r of codaRaw) {
+  const name = (r["Club"] || "").trim();
+  const rowId = (r["Club Row ID"] || "").trim();
+  if (!name || !rowId) continue;
+  const key = orgKey(name);
+  const rec = {
+    rowId,
+    name,
+    league: (r["League"] || "").trim(),
+    nation: (r["Nation"] || "").trim().toUpperCase(),
+    hitList: r["Hit List"],
+    xgStatus: (r["XG Status"] || "").trim(),
+    notes: (r["Notes"] || "").trim(),
+  };
+  const prev = codaByKey.get(key);
+  // prefer the row that has a league (the real club over an "Others" stub)
+  if (!prev || (!prev.league && rec.league)) codaByKey.set(key, rec);
+}
+
+// --- Vibecoded orgs: clubs directory enriched with account attributes ---
+const vibeClubs = query(["id", "name", "tier", "country", "crest"], "clubs");
+const vibeAccounts = query(
+  [
+    "id",
+    "name",
+    "type",
+    "tier",
+    "country",
+    "city",
+    "ltv",
+    "crest",
+    "keeper_count",
+  ],
+  "accounts",
+);
+const acctById = new Map(vibeAccounts.map((a) => [a.id, a]));
+const vibeByKey = new Map();
+for (const c of vibeClubs) {
+  if (!c.name) continue;
+  const a = acctById.get(c.id) || {};
+  vibeByKey.set(orgKey(c.name), {
+    id: c.id,
+    name: c.name,
+    type: a.type || "",
+    tier: a.tier || c.tier || "",
+    country: a.country || c.country || "",
+    city: a.city || "",
+    ltv: a.ltv || "",
+    crest: a.crest || c.crest || "",
+    keeperCount: a.keeper_count || "",
+  });
+}
+
+function deriveKind(vibe) {
+  const s = `${vibe.type} ${vibe.tier}`.toLowerCase();
+  if (s.includes("federation")) return "federation";
+  if (s.includes("media") || s.includes("analytics") || s.includes("partner"))
+    return "media_outlet";
+  if (/\bleague\b/.test(s) && !s.includes("pro league")) return "league";
+  if (s.includes("univers") || s.includes("ncaa")) return "university";
+  if (
+    s.includes("grassroots") ||
+    s.includes("police") ||
+    s.includes("uni club")
+  )
+    return "grassroots";
+  return "club";
+}
+
+// --- Merge ---
+const keys = new Set([...codaByKey.keys(), ...vibeByKey.keys()]);
+const orgs = [];
+const leagueSlugs = new Set();
+const leagues = new Map(); // slug -> name
+
+for (const key of keys) {
+  const coda = codaByKey.get(key);
+  const vibe = vibeByKey.get(key);
+  const name = (vibe?.name || coda?.name || "").trim();
+  if (!name) continue;
+  const slug = slugify(key);
+  const kind = coda ? "club" : deriveKind(vibe);
+  const isClub = kind === "club";
+
+  let leagueSlug = null;
+  const leagueName = (coda?.league || vibe?.tier || "").trim();
+  if (isClub && leagueName) {
+    leagueSlug = "league-" + slugify(orgKey(leagueName));
+    if (!leagues.has(leagueSlug)) leagues.set(leagueSlug, leagueName);
+    leagueSlugs.add(leagueSlug);
+  }
+
+  orgs.push({
+    slug,
+    name,
+    kind,
+    legacyRef: vibe?.id || null,
+    ltv: vibe?.ltv || null,
+    city: vibe?.city || null,
+    country: vibe?.country || (coda ? NATION[coda.nation] : null) || null,
+    isClub,
+    club: isClub
+      ? {
+          codaRowId: coda?.rowId || null,
+          leagueSlug,
+          nationCode: coda?.nation && NATION[coda.nation] ? coda.nation : null,
+          hitList: coda?.hitList,
+          xgStatus: coda?.xgStatus || null,
+          crest: vibe?.crest || null,
+          keeperCount: vibe?.keeperCount || null,
+          notes: coda?.notes || null,
+        }
+      : null,
+  });
+}
+
+// --- Emit SQL ---
+const out = [];
+out.push("-- Stage 1: orgs foundation (generated by stage1-orgs.mjs)");
+out.push("begin;");
+
+// nations
+const nats = Object.entries(NATION).map(
+  ([c, n]) => `(${sqlStr(c)}, ${sqlStr(n)})`,
+);
+out.push(
+  `insert into public.nations (code, name) values\n  ${nats.join(",\n  ")}\non conflict (code) do nothing;`,
+);
+
+// league-orgs
+const lrows = [...leagues.entries()].map(
+  ([slug, name]) => `(${sqlStr(name)}, 'league', ${sqlStr(slug)})`,
+);
+if (lrows.length) {
+  out.push(
+    `insert into public.companies (name, kind, slug) values\n  ${lrows.join(",\n  ")}\non conflict (slug) do update set kind = excluded.kind;`,
+  );
+  const lslugList = [...leagues.keys()].map(sqlStr).join(", ");
+  out.push(
+    `insert into public.company_org_types (company_id, org_type_id)\n  select c.id, ot.id from public.companies c join public.org_types ot on ot.code='league'\n  where c.slug in (${lslugList}) on conflict do nothing;`,
+  );
+  out.push(
+    `insert into public.competitions (company_id)\n  select c.id from public.companies c where c.slug in (${lslugList}) on conflict (company_id) do nothing;`,
+  );
+}
+
+// org companies
+const orgRows = orgs.map(
+  (o) =>
+    `(${sqlStr(o.slug)}, ${sqlStr(o.name)}, ${sqlStr(o.kind)}, ${sqlStr(o.legacyRef)}, ${sqlInt(o.ltv)}, ${sqlStr(o.city)}, ${sqlStr(o.country)})`,
+);
+out.push(`with org_src(slug, name, kind, legacy_ref, ltv, city, country) as (values\n  ${orgRows.join(",\n  ")}\n)
+insert into public.companies (slug, name, kind, legacy_ref, ltv, city, country)
+select slug, name, kind, legacy_ref, ltv, city, country from org_src
+on conflict (slug) do update set
+  name = excluded.name, kind = excluded.kind,
+  legacy_ref = coalesce(excluded.legacy_ref, public.companies.legacy_ref),
+  ltv = coalesce(excluded.ltv, public.companies.ltv),
+  city = coalesce(excluded.city, public.companies.city),
+  country = coalesce(excluded.country, public.companies.country),
+  updated_at = now();`);
+
+// company_org_types for orgs
+const otRows = orgs.map((o) => `(${sqlStr(o.slug)}, ${sqlStr(o.kind)})`);
+out.push(`with ot_src(slug, code) as (values\n  ${otRows.join(",\n  ")}\n)
+insert into public.company_org_types (company_id, org_type_id)
+select c.id, ot.id from ot_src s
+  join public.companies c on c.slug = s.slug
+  join public.org_types ot on ot.code = s.code
+on conflict do nothing;`);
+
+// clubs
+const clubRows = orgs
+  .filter((o) => o.isClub)
+  .map(
+    (o) =>
+      `(${sqlStr(o.slug)}, ${sqlStr(o.club.codaRowId)}, ${sqlStr(o.club.leagueSlug)}, ${sqlStr(o.club.nationCode)}, ${sqlBool(o.club.hitList)}, ${sqlStr(o.club.xgStatus)}, ${sqlStr(o.club.crest)}, ${sqlInt(o.club.keeperCount)}, ${sqlStr(o.club.notes)})`,
+  );
+out.push(`with club_src(slug, coda_row_id, league_slug, nation_code, hit_list, xg_status, crest, keeper_count, notes) as (values\n  ${clubRows.join(",\n  ")}\n)
+insert into public.clubs (company_id, coda_row_id, league_company_id, nation_id, hit_list, xg_status, crest, keeper_count, notes)
+select c.id, s.coda_row_id, lc.id, n.id, s.hit_list, s.xg_status, s.crest, coalesce(s.keeper_count, 0), s.notes
+from club_src s
+  join public.companies c on c.slug = s.slug
+  left join public.companies lc on lc.slug = s.league_slug
+  left join public.nations n on n.code = s.nation_code
+on conflict (company_id) do update set
+  coda_row_id = excluded.coda_row_id, league_company_id = excluded.league_company_id,
+  nation_id = excluded.nation_id, hit_list = excluded.hit_list, xg_status = excluded.xg_status,
+  crest = excluded.crest, keeper_count = excluded.keeper_count, notes = excluded.notes,
+  updated_at = now();`);
+
+out.push("commit;");
+out.push(
+  `-- counts: orgs=${orgs.length} leagues=${leagues.size} clubs=${clubRows.length} nations=${Object.keys(NATION).length}`,
+);
+
+process.stdout.write(out.join("\n\n") + "\n");
